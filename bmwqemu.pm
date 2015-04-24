@@ -66,12 +66,17 @@ our $standstillthreshold = _scale_timeout(600);
 
 our %vars;
 
-sub load_vars() {
-    my $fn  = "vars.json";
+sub load_vars {
+    my ($fh) = @_;
     my $ret = {};
-    local $/;
-    open(my $fh, '<', $fn) or return 0;
-    eval { $ret = JSON->new->relaxed->decode(<$fh>); };
+    if (!defined $fh) {
+        open($fh, '<', "vars.json") or return 0;
+    }
+    die unless ref $fh eq "GLOB";
+    eval {
+        local $/;
+        $ret = JSON->new->relaxed->decode(<$fh>);
+    };
     die                                  #
       "parse error in vars.json:\n" .    #
       "$@" if $@;
